@@ -6,10 +6,10 @@
 
 ## 本轮目标
 
-完成第 2.1 到第 2.3 步，让需求分析 Agent 具备稳定 API 契约、Prompt 版本和样例数据集：
+完成第 2.4 到第 2.5 步，让需求分析 Agent 具备最小评测能力和 CLI 演示入口：
 
 ```text
-产品化 API 契约 -> Prompt 版本化 -> 样例需求数据集
+样例数据集 -> 最小评测脚本 -> CLI 演示入口
 ```
 
 ## 当前已完成
@@ -37,9 +37,11 @@
 - 第 2.1 已完成：`/api/analyze/requirement` 支持 `requirement` + 可选 `context`，并增加输入长度校验。
 - 第 2.2 已完成：需求分析 Prompt 固定为 `requirement-analysis-v1`，Prompt 构造集中到 `backend-go/internal/requirement/prompt.go`。
 - 第 2.3 已完成：新增 `evals/requirement_samples.jsonl`，包含 10 条典型后端需求样例。
+- 第 2.4 已完成：新增 `evals/run_requirement_eval.py`，可批量调用需求分析接口并做规则评测。
+- 第 2.5 已完成：新增 `examples/requirement_demo.py`，可通过 CLI 调用接口并展示结构化分析结果。
 
 ## 下一步
 
-1. 第 2.4 步：实现最小评测脚本，读取 `evals/requirement_samples.jsonl` 调用接口并检查输出质量。
-2. 第 2.5 步：增加结果展示与演示入口，优先考虑 CLI 演示。
+1. 启动 Go Backend 后，运行 `evals/run_requirement_eval.py` 验证 10 条样例输出质量。
+2. 使用 `examples/requirement_demo.py` 演示单条需求分析效果。
 3. 第 2.6 步：整理第 2 阶段验收总结。
