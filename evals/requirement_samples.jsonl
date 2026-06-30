@@ -1,0 +1,10 @@
+{"id":"refund_001","category":"order_refund","requirement":"用户希望增加订单退款功能，支持部分退款、原路退回、退款失败重试，并记录操作审计日志。","context":"当前系统已有订单和支付模块，退款依赖第三方支付通道，支付回调是异步通知。","expected_keywords":["幂等","退款状态","失败重试","审计日志"]}
+{"id":"coupon_001","category":"coupon","requirement":"运营希望支持按用户分群批量发放优惠券，发放后用户可以在下单时自动匹配可用优惠券。","context":"当前系统已有用户标签和订单模块，优惠券规则需要支持有效期、门槛金额和适用商品范围。","expected_keywords":["批量发放","优惠券规则","有效期","适用范围"]}
+{"id":"permission_001","category":"permission","requirement":"管理员希望给后台系统增加角色权限管理，不同角色只能访问授权菜单和操作按钮。","context":"当前后台已有用户登录和菜单配置，但没有细粒度按钮权限。","expected_keywords":["RBAC","角色","权限","菜单","按钮"]}
+{"id":"notification_001","category":"notification","requirement":"用户订单发货后，需要通过站内信、短信和邮件通知用户，并支持用户关闭部分通知渠道。","context":"当前系统已有订单发货状态，但通知能力需要对接多个外部通道。","expected_keywords":["通知渠道","用户偏好","异步发送","失败重试"]}
+{"id":"inventory_001","category":"inventory","requirement":"下单时需要实时扣减库存，支付超时或订单取消后释放库存，避免超卖。","context":"当前商品库存存在 MySQL 中，下单和支付是两个独立流程。","expected_keywords":["库存扣减","库存释放","超卖","并发","事务"]}
+{"id":"payment_callback_001","category":"payment","requirement":"支付平台会异步回调支付结果，系统需要更新订单支付状态，并处理重复回调和乱序回调。","context":"当前订单有待支付、已支付、已取消状态，第三方支付回调可能重复发送。","expected_keywords":["幂等","回调验签","状态机","重复回调","乱序"]}
+{"id":"audit_001","category":"audit","requirement":"后台关键操作需要记录审计日志，包括操作人、操作对象、变更前后内容和操作时间，支持按条件查询。","context":"当前后台已有管理员账号体系，但没有统一审计日志模块。","expected_keywords":["审计日志","操作人","变更前后","查询","合规"]}
+{"id":"import_001","category":"batch_import","requirement":"运营需要批量导入商品价格调整表，系统需要校验文件格式、展示错误行，并支持确认后批量生效。","context":"当前商品价格由后台单条编辑，批量导入文件预计为 Excel 或 CSV。","expected_keywords":["文件校验","错误行","批量生效","事务","回滚"]}
+{"id":"risk_control_001","category":"risk_control","requirement":"用户下单时需要接入风控规则，对高风险订单进行拦截或进入人工审核流程。","context":"当前订单创建链路是同步接口，风控规则包括黑名单、频次限制和金额阈值。","expected_keywords":["风控规则","拦截","人工审核","黑名单","频次限制"]}
+{"id":"async_task_001","category":"async_task","requirement":"用户提交大批量数据处理任务后，系统需要异步执行，并提供任务进度、失败原因和结果下载。","context":"当前接口同步处理小数据量，大任务可能执行数分钟。","expected_keywords":["异步任务","任务进度","失败原因","结果下载","队列"]}

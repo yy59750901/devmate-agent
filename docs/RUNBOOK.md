@@ -131,15 +131,22 @@ backend-go/config/config.local.yaml
 ```bash
 curl -X POST http://localhost:8080/api/analyze/requirement \
   -H 'Content-Type: application/json' \
-  -d '{"requirement":"用户希望增加订单退款功能，支持部分退款、原路退回、退款失败重试，并记录操作审计日志。"}'
+  -d '{"requirement":"用户希望增加订单退款功能，支持部分退款、原路退回、退款失败重试，并记录操作审计日志。","context":"当前系统已有订单和支付模块，退款依赖第三方支付通道。"}'
 ```
 
 现在该接口会真实调用配置的 LLM，并返回结构化需求分析结果和 LLM usage 元数据。失败时会返回结构化错误对象。
+
+请求字段：
+
+- `requirement`：必填，trim 后长度为 10 到 4000 个字符。
+- `context`：可选，业务背景，trim 后最多 2000 个字符。
+- `prompt_version`：由后端固定为 `requirement-analysis-v1`，不需要客户端传入。
 
 响应中的 `output` 结构类似：
 
 ```json
 {
+  "prompt_version": "requirement-analysis-v1",
   "result": {
     "summary": "...",
     "apis": [],
@@ -186,6 +193,6 @@ go -C backend-go test ./...
 
 ## 7. 下一步
 
-- 用真实需求调用 `/api/analyze/requirement`，评估 result、llm usage、latency_ms、error 和脱敏日志输出质量。
-- 后续进入持久化阶段时，将 usage 从 task output 迁移/同步到 `llm_calls` 表。
-- 完成第 1 阶段总结，然后进入第 2 阶段。
+- 运行第 2.4 步：实现最小评测脚本，读取 `evals/requirement_samples.jsonl` 调用接口并检查输出质量。
+- 运行第 2.5 步：增加结果展示与演示入口。
+- 运行第 2.6 步：整理第 2 阶段验收总结。

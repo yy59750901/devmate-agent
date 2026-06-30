@@ -28,6 +28,15 @@ func (f *fakeLLMClient) Chat(ctx context.Context, request llm.ChatRequest) (*llm
 	return resp, nil
 }
 
+func mustAnalyzeInput(t *testing.T, requirement string, context string) AnalyzeInput {
+	t.Helper()
+	input, err := NewAnalyzeInput(requirement, context)
+	if err != nil {
+		t.Fatalf("new analyze input: %v", err)
+	}
+	return input
+}
+
 func TestAnalyzerAnalyze(t *testing.T) {
 	client := &fakeLLMClient{responses: []*llm.ChatResponse{{
 		Model: "qwen-plus",
@@ -44,7 +53,7 @@ func TestAnalyzerAnalyze(t *testing.T) {
 	}}}
 
 	analyzer := NewAnalyzer(client)
-	analysis, err := analyzer.Analyze(context.Background(), "用户希望增加订单退款功能")
+	analysis, err := analyzer.Analyze(context.Background(), mustAnalyzeInput(t, "用户希望增加订单退款功能", "当前已有订单模块"))
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
@@ -63,6 +72,9 @@ func TestAnalyzerAnalyze(t *testing.T) {
 	if analysis.LLM.LatencyMS < 0 {
 		t.Fatalf("unexpected latency: %d", analysis.LLM.LatencyMS)
 	}
+	if analysis.PromptVersion != PromptVersion {
+		t.Fatalf("unexpected prompt version: %s", analysis.PromptVersion)
+	}
 	if client.requests[0].ResponseFormat != llm.ResponseFormatJSONObject {
 		t.Fatalf("expected json object response format")
 	}
@@ -75,7 +87,7 @@ func TestAnalyzerExtractsJSONFromMarkdownFence(t *testing.T) {
 	content := "```json\n{\"summary\":\"需求摘要\",\"apis\":[],\"tables\":[],\"risks\":[],\"test_cases\":[],\"questions\":[]}\n```"
 	client := &fakeLLMClient{responses: []*llm.ChatResponse{{Message: llm.Message{Role: llm.RoleAssistant, Content: content}, FinishReason: "stop"}}}
 
-	analysis, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	analysis, err := NewAnalyzer(client).Analyze(context.Background(), mustAnalyzeInput(t, "这是一个有效的测试需求", ""))
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
@@ -88,7 +100,7 @@ func TestAnalyzerExtractsJSONWithPrefixAndSuffix(t *testing.T) {
 	content := "好的，分析如下：\n{\"summary\":\"需求摘要\",\"apis\":[],\"tables\":[],\"risks\":[],\"test_cases\":[],\"questions\":[]}\n以上是结果。"
 	client := &fakeLLMClient{responses: []*llm.ChatResponse{{Message: llm.Message{Role: llm.RoleAssistant, Content: content}, FinishReason: "stop"}}}
 
-	analysis, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	analysis, err := NewAnalyzer(client).Analyze(context.Background(), mustAnalyzeInput(t, "这是一个有效的测试需求", ""))
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
@@ -103,7 +115,7 @@ func TestAnalyzerRetriesInvalidJSON(t *testing.T) {
 		{Message: llm.Message{Role: llm.RoleAssistant, Content: `{"summary":"修复后需求摘要"}`}, FinishReason: "stop"},
 	}}
 
-	analysis, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	analysis, err := NewAnalyzer(client).Analyze(context.Background(), mustAnalyzeInput(t, "这是一个有效的测试需求", ""))
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
@@ -124,7 +136,7 @@ func TestAnalyzerRejectsTruncatedOutputAfterRetry(t *testing.T) {
 		{Message: llm.Message{Role: llm.RoleAssistant, Content: `{}`}, FinishReason: "length"},
 	}}
 
-	_, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	_, err := NewAnalyzer(client).Analyze(context.Background(), mustAnalyzeInput(t, "这是一个有效的测试需求", ""))
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -143,7 +155,7 @@ func TestAnalyzerRejectsInvalidJSONAfterRetry(t *testing.T) {
 		{Message: llm.Message{Role: llm.RoleAssistant, Content: `still not json`}, FinishReason: "stop"},
 	}}
 
-	_, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	_, err := NewAnalyzer(client).Analyze(context.Background(), mustAnalyzeInput(t, "这是一个有效的测试需求", ""))
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -162,7 +174,7 @@ func TestAnalyzerNormalizesNilSlices(t *testing.T) {
 		FinishReason: "stop",
 	}}}
 
-	analysis, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	analysis, err := NewAnalyzer(client).Analyze(context.Background(), mustAnalyzeInput(t, "这是一个有效的测试需求", ""))
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}

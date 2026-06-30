@@ -32,6 +32,7 @@ func (s *Server) health(c *gin.Context) {
 
 type analyzeRequirementRequest struct {
 	Requirement string `json:"requirement" binding:"required"`
+	Context     string `json:"context"`
 }
 
 func (s *Server) analyzeRequirement(c *gin.Context) {
@@ -41,11 +42,21 @@ func (s *Server) analyzeRequirement(c *gin.Context) {
 		return
 	}
 
-	t := s.tasks.Create("requirement_analysis", map[string]any{"requirement": req.Requirement})
+	input, err := requirement.NewAnalyzeInput(req.Requirement, req.Context)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": badRequestError("invalid requirement analysis input", err)})
+		return
+	}
+
+	t := s.tasks.Create("requirement_analysis", map[string]any{
+		"requirement":    input.Requirement,
+		"context":        input.Context,
+		"prompt_version": input.PromptVersion,
+	})
 	s.tasks.MarkRunning(t.ID)
 
 	startedAt := time.Now()
-	analysis, err := s.requirementAnalyzer.Analyze(c.Request.Context(), req.Requirement)
+	analysis, err := s.requirementAnalyzer.Analyze(c.Request.Context(), input)
 	if err != nil {
 		taskErr := taskErrorFromAnalyzeError(err)
 		s.tasks.MarkFailed(t.ID, taskErr)
