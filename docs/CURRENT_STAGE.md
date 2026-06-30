@@ -6,10 +6,10 @@
 
 ## 本轮目标
 
-完成第 2.4 到第 2.5 步，让需求分析 Agent 具备最小评测能力和 CLI 演示入口：
+完成第 2.6 步，整理第 2 阶段验收总结，并为第 3 阶段提供启动上下文：
 
 ```text
-样例数据集 -> 最小评测脚本 -> CLI 演示入口
+第 2 阶段验收总结 -> 第 3 阶段 RAG 研发知识库启动上下文
 ```
 
 ## 当前已完成
@@ -39,9 +39,10 @@
 - 第 2.3 已完成：新增 `evals/requirement_samples.jsonl`，包含 10 条典型后端需求样例。
 - 第 2.4 已完成：新增 `evals/run_requirement_eval.py`，可批量调用需求分析接口并做规则评测。
 - 第 2.5 已完成：新增 `examples/requirement_demo.py`，可通过 CLI 调用接口并展示结构化分析结果。
+- 第 2.6 已完成：新增 `docs/STAGE_2_REVIEW.md`，作为第 2 阶段验收总结和第 3 阶段启动上下文。
 
 ## 下一步
 
-1. 启动 Go Backend 后，运行 `evals/run_requirement_eval.py` 验证 10 条样例输出质量。
-2. 使用 `examples/requirement_demo.py` 演示单条需求分析效果。
-3. 第 2.6 步：整理第 2 阶段验收总结。
+1. 如需降低上下文成本，可在新会话中从 `docs/STAGE_2_REVIEW.md` 启动。
+2. 进入第 3 阶段前，先确认第 2 阶段验收清单是否通过。
+3. 第 3 阶段建议从“RAG 研发知识库”开始：明确 RAG 目标问题集、加载 `docs/*.md`、在 `agent-python` 中引入 LlamaIndex 最小检索问答链路。

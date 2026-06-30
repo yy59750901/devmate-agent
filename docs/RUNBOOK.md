@@ -221,8 +221,17 @@ go -C backend-go test ./...
 /Users/yangyong/.workbuddy/binaries/python/versions/3.13.12/bin/python3 -m py_compile agent-python/app/main.py agent-python/app/schemas/requirement.py agent-python/app/workflows/requirement_analysis.py
 ```
 
-## 9. 下一步
+## 9. 阶段总结
 
-- 启动 Go Backend 后运行 `evals/run_requirement_eval.py`，查看 10 条样例评测结果。
-- 运行 `examples/requirement_demo.py`，验证单条需求演示效果。
-- 运行第 2.6 步：整理第 2 阶段验收总结。
+第 2 阶段总结文档：
+
+```text
+docs/STAGE_2_REVIEW.md
+```
+
+后续进入第 3 阶段前，建议先确认第 2 阶段验收清单是否通过。
+
+## 10. 下一步
+
+- 如需降低上下文成本，可在新会话中从 `docs/STAGE_2_REVIEW.md` 启动。
+- 第 3 阶段建议从“RAG 研发知识库”开始：明确 RAG 目标问题集、加载 `docs/*.md`、在 `agent-python` 中引入 LlamaIndex 最小检索问答链路。
