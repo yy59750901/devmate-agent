@@ -29,11 +29,11 @@ Go Backend -> internal/llm.Client -> OpenAI-compatible API
 - 已支持通过 `backend-go/config/config.local.yaml` 读取 Go Backend 本地配置。
 - 已新增 `backend-go/internal/requirement` 包，用 LLM Client 实现真实需求分析，包含 Prompt、JSON 解析、基础校验和 `finish_reason=length` 截断防护。
 - `/api/analyze/requirement` 已从 Python mock 链路切换为 Go LLM 真实调用链路。
+- 已增强结构化输出稳定性：支持直接 JSON、Markdown code block、前后带说明文字的 JSON 片段；增加一次修复重试；增加模型调用、截断、JSON 解析、校验错误分类。
 
 ## 下一步
 
-1. 重启 Go Backend，使 `/api/analyze/requirement` 使用新的真实 LLM 链路。
-2. 用退款需求示例调用接口，观察真实模型输出。
-3. 根据输出效果优化 Prompt 和结构化字段。
-4. 增加失败重试、错误分类和日志记录。
-5. 后续再决定 Python Agent Service 是否也接入 LLM，或保留给 LangGraph/RAG 阶段。
+1. 重启 Go Backend，用真实需求调用 `/api/analyze/requirement`，评估输出质量。
+2. 增加 token usage 记录和持久化，为成本统计做准备。
+3. 增加 LLM 调用日志脱敏和错误响应规范。
+4. 完成第 1 阶段总结，然后进入第 2 阶段：需求分析 Agent 最小版产品化。

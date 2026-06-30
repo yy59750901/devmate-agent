@@ -149,5 +149,5 @@ go -C backend-go test ./...
 ## 7. 下一步
 
 - 用真实需求调用 `/api/analyze/requirement`，评估结构化输出质量。
-- 根据输出效果优化需求分析 Prompt。
-- 增加失败重试、错误分类和日志记录。
+- 增加 token usage 记录和持久化，为成本统计做准备。
+- 增加 LLM 调用日志脱敏和错误响应规范。

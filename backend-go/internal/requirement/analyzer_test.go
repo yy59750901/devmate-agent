@@ -2,6 +2,7 @@ package requirement
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -9,18 +10,26 @@ import (
 )
 
 type fakeLLMClient struct {
-	response *llm.ChatResponse
-	err      error
-	request  llm.ChatRequest
+	responses []*llm.ChatResponse
+	err       error
+	requests  []llm.ChatRequest
 }
 
 func (f *fakeLLMClient) Chat(ctx context.Context, request llm.ChatRequest) (*llm.ChatResponse, error) {
-	f.request = request
-	return f.response, f.err
+	f.requests = append(f.requests, request)
+	if f.err != nil {
+		return nil, f.err
+	}
+	if len(f.responses) == 0 {
+		return nil, errors.New("no fake response")
+	}
+	resp := f.responses[0]
+	f.responses = f.responses[1:]
+	return resp, nil
 }
 
 func TestAnalyzerAnalyze(t *testing.T) {
-	client := &fakeLLMClient{response: &llm.ChatResponse{
+	client := &fakeLLMClient{responses: []*llm.ChatResponse{{
 		Message: llm.Message{Role: llm.RoleAssistant, Content: `{
 			"summary":"增加订单退款能力",
 			"apis":["POST /api/refunds"],
@@ -30,7 +39,7 @@ func TestAnalyzerAnalyze(t *testing.T) {
 			"questions":["是否支持原路退回？"]
 		}`},
 		FinishReason: "stop",
-	}}
+	}}}
 
 	analyzer := NewAnalyzer(client)
 	result, err := analyzer.Analyze(context.Background(), "用户希望增加订单退款功能")
@@ -43,49 +52,104 @@ func TestAnalyzerAnalyze(t *testing.T) {
 	if len(result.APIs) != 1 || result.APIs[0] != "POST /api/refunds" {
 		t.Fatalf("unexpected apis: %+v", result.APIs)
 	}
-	if client.request.ResponseFormat != llm.ResponseFormatJSONObject {
+	if client.requests[0].ResponseFormat != llm.ResponseFormatJSONObject {
 		t.Fatalf("expected json object response format")
 	}
-	if len(client.request.Messages) != 2 {
-		t.Fatalf("expected 2 messages, got %d", len(client.request.Messages))
+	if len(client.requests[0].Messages) != 2 {
+		t.Fatalf("expected 2 messages, got %d", len(client.requests[0].Messages))
 	}
 }
 
-func TestAnalyzerRejectsTruncatedOutput(t *testing.T) {
-	client := &fakeLLMClient{response: &llm.ChatResponse{
-		Message:      llm.Message{Role: llm.RoleAssistant, Content: `{}`},
-		FinishReason: "length",
+func TestAnalyzerExtractsJSONFromMarkdownFence(t *testing.T) {
+	content := "```json\n{\"summary\":\"需求摘要\",\"apis\":[],\"tables\":[],\"risks\":[],\"test_cases\":[],\"questions\":[]}\n```"
+	client := &fakeLLMClient{responses: []*llm.ChatResponse{{Message: llm.Message{Role: llm.RoleAssistant, Content: content}, FinishReason: "stop"}}}
+
+	result, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	if err != nil {
+		t.Fatalf("analyze: %v", err)
+	}
+	if result.Summary != "需求摘要" {
+		t.Fatalf("unexpected summary: %s", result.Summary)
+	}
+}
+
+func TestAnalyzerExtractsJSONWithPrefixAndSuffix(t *testing.T) {
+	content := "好的，分析如下：\n{\"summary\":\"需求摘要\",\"apis\":[],\"tables\":[],\"risks\":[],\"test_cases\":[],\"questions\":[]}\n以上是结果。"
+	client := &fakeLLMClient{responses: []*llm.ChatResponse{{Message: llm.Message{Role: llm.RoleAssistant, Content: content}, FinishReason: "stop"}}}
+
+	result, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	if err != nil {
+		t.Fatalf("analyze: %v", err)
+	}
+	if result.Summary != "需求摘要" {
+		t.Fatalf("unexpected summary: %s", result.Summary)
+	}
+}
+
+func TestAnalyzerRetriesInvalidJSON(t *testing.T) {
+	client := &fakeLLMClient{responses: []*llm.ChatResponse{
+		{Message: llm.Message{Role: llm.RoleAssistant, Content: `not json`}, FinishReason: "stop"},
+		{Message: llm.Message{Role: llm.RoleAssistant, Content: `{"summary":"修复后需求摘要"}`}, FinishReason: "stop"},
+	}}
+
+	result, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	if err != nil {
+		t.Fatalf("analyze: %v", err)
+	}
+	if result.Summary != "修复后需求摘要" {
+		t.Fatalf("unexpected summary: %s", result.Summary)
+	}
+	if len(client.requests) != 2 {
+		t.Fatalf("expected retry, got %d requests", len(client.requests))
+	}
+	if !strings.Contains(client.requests[1].Messages[1].Content, "上一次输出") {
+		t.Fatalf("expected repair prompt, got: %s", client.requests[1].Messages[1].Content)
+	}
+}
+
+func TestAnalyzerRejectsTruncatedOutputAfterRetry(t *testing.T) {
+	client := &fakeLLMClient{responses: []*llm.ChatResponse{
+		{Message: llm.Message{Role: llm.RoleAssistant, Content: `{}`}, FinishReason: "length"},
+		{Message: llm.Message{Role: llm.RoleAssistant, Content: `{}`}, FinishReason: "length"},
 	}}
 
 	_, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if !strings.Contains(err.Error(), "truncated") {
-		t.Fatalf("unexpected error: %v", err)
+	var analysisErr *AnalysisError
+	if !errors.As(err, &analysisErr) {
+		t.Fatalf("expected AnalysisError, got %T", err)
+	}
+	if analysisErr.Kind != ErrorKindTruncated {
+		t.Fatalf("unexpected error kind: %s", analysisErr.Kind)
 	}
 }
 
-func TestAnalyzerRejectsInvalidJSON(t *testing.T) {
-	client := &fakeLLMClient{response: &llm.ChatResponse{
-		Message:      llm.Message{Role: llm.RoleAssistant, Content: `not json`},
-		FinishReason: "stop",
+func TestAnalyzerRejectsInvalidJSONAfterRetry(t *testing.T) {
+	client := &fakeLLMClient{responses: []*llm.ChatResponse{
+		{Message: llm.Message{Role: llm.RoleAssistant, Content: `not json`}, FinishReason: "stop"},
+		{Message: llm.Message{Role: llm.RoleAssistant, Content: `still not json`}, FinishReason: "stop"},
 	}}
 
 	_, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if !strings.Contains(err.Error(), "parse requirement analysis json") {
-		t.Fatalf("unexpected error: %v", err)
+	var analysisErr *AnalysisError
+	if !errors.As(err, &analysisErr) {
+		t.Fatalf("expected AnalysisError, got %T", err)
+	}
+	if analysisErr.Kind != ErrorKindJSONParse {
+		t.Fatalf("unexpected error kind: %s", analysisErr.Kind)
 	}
 }
 
 func TestAnalyzerNormalizesNilSlices(t *testing.T) {
-	client := &fakeLLMClient{response: &llm.ChatResponse{
+	client := &fakeLLMClient{responses: []*llm.ChatResponse{{
 		Message:      llm.Message{Role: llm.RoleAssistant, Content: `{"summary":"需求摘要"}`},
 		FinishReason: "stop",
-	}}
+	}}}
 
 	result, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
 	if err != nil {

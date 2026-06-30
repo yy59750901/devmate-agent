@@ -137,6 +137,24 @@ GoLand 运行 `cmd/llmcheck/main.go` 时，把 Working directory 设置为：
 config/config.local.yaml
 ```
 
+## 结构化输出稳定性策略
+
+需求分析接口当前采用以下策略提升结构化输出稳定性：
+
+1. 优先直接解析模型返回内容为 JSON。
+2. 如果直接解析失败，尝试移除 Markdown code block。
+3. 如果仍失败，尝试从回复文本中提取第一个完整 JSON object。
+4. 如果解析或校验失败，触发一次修复重试。
+5. 如果 `finish_reason=length`，认为输出被截断，触发修复重试；再次失败则返回截断错误。
+6. 对错误进行基础分类：模型调用、输出截断、JSON 解析、字段校验。
+
+这些逻辑位于：
+
+```text
+backend-go/internal/requirement/analyzer.go
+backend-go/internal/requirement/errors.go
+```
+
 ## 当前验证
 
 已通过：
@@ -159,7 +177,6 @@ go -C backend-go test ./...
 ## 下一步
 
 1. 用真实需求调用 `/api/analyze/requirement`，检查结构化输出质量。
-2. 优化需求分析 Prompt 和字段约束。
-3. 增加失败重试、错误分类和日志记录。
-4. 增加 token usage 持久化，为成本统计做准备。
-5. 后续在 Python Agent Service 中引入 LangGraph/RAG。
+2. 增加 token usage 持久化，为成本统计做准备。
+3. 增加 LLM 调用日志脱敏和错误响应规范。
+4. 完成第 1 阶段总结，然后进入第 2 阶段。

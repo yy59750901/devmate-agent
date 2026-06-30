@@ -28,11 +28,13 @@ devmate-agent/
 - 不为了学框架而学框架，框架必须服务于项目能力。
 - 先做最小闭环，再补复杂能力。
 
-## 技术主线
+## 技术选型原则
 
-- Go 是主线语言，负责工程化落地。
-- Python 是生态补充，负责 LangGraph、LlamaIndex、Ragas、DeepEval 等主流 Agent 框架。
-- TypeScript 只在需要做演示 UI 时少量使用。
+- 不因为用户是 Go 开发就强行把所有能力放到 Go。
+- 按能力边界和生态成熟度选择实现位置：适合 Go 的放 Go，适合 Python 的放 Python。
+- Go 更适合工程化底座：API、任务、权限、模型网关、工具服务、成本统计、审计和持久化。
+- Python 更适合 Agent 生态能力：LangGraph、LlamaIndex、Ragas、DeepEval、RAG pipeline、多步骤 Agent 编排和评测。
+- TypeScript 只在需要做演示 UI 或 Web Agent 产品体验时少量使用。
 
 ## 项目节奏
 
@@ -42,7 +44,20 @@ devmate-agent/
 2. `docs/ARCHITECTURE.md`
 3. `.workbuddy/memory/` 中的最近记录
 
-然后确认当前阶段和下一步任务。
+然后先说明：
+
+1. 下一步打算做什么
+2. 属于总里程碑中的哪一步
+3. 目的是什么
+4. 本轮会改哪些范围
+
+用户确认后再开始执行。
+
+## Git 提交约定
+
+除非用户明确要求提交或推送，否则不要执行 `git commit` 或 `git push`。
+
+完成代码或文档修改后，只说明变更摘要、测试结果和当前 `git status`，由用户决定是否提交。
 
 ## 当前下一步
 
