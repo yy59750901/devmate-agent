@@ -35,7 +35,7 @@ type analyzeRequirementRequest struct {
 func (s *Server) analyzeRequirement(c *gin.Context) {
 	var req analyzeRequirementRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": badRequestError("invalid request body", err)})
 		return
 	}
 
@@ -44,7 +44,7 @@ func (s *Server) analyzeRequirement(c *gin.Context) {
 
 	analysis, err := s.requirementAnalyzer.Analyze(c.Request.Context(), req.Requirement)
 	if err != nil {
-		s.tasks.MarkFailed(t.ID, err)
+		s.tasks.MarkFailed(t.ID, taskErrorFromAnalyzeError(err))
 		updated, _ := s.tasks.Get(t.ID)
 		c.JSON(http.StatusBadGateway, updated)
 		return

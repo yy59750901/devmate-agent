@@ -134,7 +134,7 @@ curl -X POST http://localhost:8080/api/analyze/requirement \
   -d '{"requirement":"用户希望增加订单退款功能，支持部分退款、原路退回、退款失败重试，并记录操作审计日志。"}'
 ```
 
-现在该接口会真实调用配置的 LLM，并返回结构化需求分析结果和 LLM usage 元数据。
+现在该接口会真实调用配置的 LLM，并返回结构化需求分析结果和 LLM usage 元数据。失败时会返回结构化错误对象。
 
 响应中的 `output` 结构类似：
 
@@ -160,6 +160,17 @@ curl -X POST http://localhost:8080/api/analyze/requirement \
 }
 ```
 
+失败时的 `error` 结构类似：
+
+```json
+{
+  "kind": "json_parse",
+  "message": "parse requirement analysis json",
+  "detail": "json object start not found",
+  "retryable": true
+}
+```
+
 ## 6. 当前验证情况
 
 已完成：
@@ -172,6 +183,6 @@ go -C backend-go test ./...
 
 ## 7. 下一步
 
-- 用真实需求调用 `/api/analyze/requirement`，评估结构化输出质量。
-- 增加 token usage 记录和持久化，为成本统计做准备。
-- 增加 LLM 调用日志脱敏和错误响应规范。
+- 用真实需求调用 `/api/analyze/requirement`，评估 result、llm usage 和 error 输出质量。
+- 增加 LLM 调用日志脱敏。
+- 后续进入持久化阶段时，将 usage 从 task output 迁移/同步到 `llm_calls` 表。

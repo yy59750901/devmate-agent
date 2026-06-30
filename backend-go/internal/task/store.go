@@ -22,7 +22,7 @@ type Task struct {
 	Status    Status         `json:"status"`
 	Input     map[string]any `json:"input"`
 	Output    any            `json:"output,omitempty"`
-	Error     string         `json:"error,omitempty"`
+	Error     *Error         `json:"error,omitempty"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 }
@@ -73,14 +73,14 @@ func (s *Store) MarkSucceeded(id string, output any) {
 	s.update(id, func(t *Task) {
 		t.Status = StatusSucceeded
 		t.Output = output
-		t.Error = ""
+		t.Error = nil
 	})
 }
 
-func (s *Store) MarkFailed(id string, err error) {
+func (s *Store) MarkFailed(id string, taskErr *Error) {
 	s.update(id, func(t *Task) {
 		t.Status = StatusFailed
-		t.Error = err.Error()
+		t.Error = taskErr
 	})
 }
 

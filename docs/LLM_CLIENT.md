@@ -183,6 +183,26 @@ backend-go/internal/requirement/errors.go
 
 当前 usage 只透传在内存 task output 中。后续进入持久化和观测阶段时，再落到 `llm_calls` 表。
 
+## 错误响应结构
+
+失败任务的 `error` 字段是结构化对象：
+
+```json
+{
+  "kind": "json_parse",
+  "message": "parse requirement analysis json",
+  "detail": "json object start not found",
+  "retryable": true
+}
+```
+
+字段说明：
+
+- `kind`：错误类型，如 `model_call`、`truncated`、`json_parse`、`validation`、`bad_request`、`internal`。
+- `message`：稳定的错误摘要，适合前端展示或日志聚合。
+- `detail`：底层错误细节，适合开发排查。
+- `retryable`：是否建议自动或人工重试。
+
 ## 当前验证
 
 已通过：
@@ -204,7 +224,7 @@ go -C backend-go test ./...
 
 ## 下一步
 
-1. 用真实需求调用 `/api/analyze/requirement`，检查结构化输出质量。
-2. 增加 token usage 持久化，为成本统计做准备。
-3. 增加 LLM 调用日志脱敏和错误响应规范。
+1. 用真实需求调用 `/api/analyze/requirement`，检查 result、llm usage 和 error 输出质量。
+2. 增加 LLM 调用日志脱敏。
+3. 后续进入持久化阶段时，将 usage 从 task output 迁移/同步到 `llm_calls` 表。
 4. 完成第 1 阶段总结，然后进入第 2 阶段。

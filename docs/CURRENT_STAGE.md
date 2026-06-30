@@ -31,10 +31,11 @@ Go Backend -> internal/llm.Client -> OpenAI-compatible API
 - `/api/analyze/requirement` 已从 Python mock 链路切换为 Go LLM 真实调用链路。
 - 已增强结构化输出稳定性：支持直接 JSON、Markdown code block、前后带说明文字的 JSON 片段；增加一次修复重试；增加模型调用、截断、JSON 解析、校验错误分类。
 - 需求分析输出已增加 LLM metadata：`model`、`finish_reason`、`usage`，当前先透传到 task output，为后续成本统计和持久化打基础。
+- task 失败结果已改为结构化错误对象，包含 `kind`、`message`、`detail`、`retryable`，便于后续日志、trace 和失败归因。
 
 ## 下一步
 
-1. 重启 Go Backend，用真实需求调用 `/api/analyze/requirement`，评估 result 和 llm usage 输出质量。
-2. 增加 LLM 调用日志脱敏和错误响应规范。
+1. 重启 Go Backend，用真实需求调用 `/api/analyze/requirement`，评估 result、llm usage 和结构化错误输出质量。
+2. 增加 LLM 调用日志脱敏。
 3. 后续进入持久化阶段时，将 usage 从 task output 迁移/同步到 `llm_calls` 表。
 4. 完成第 1 阶段总结，然后进入第 2 阶段：需求分析 Agent 最小版产品化。
