@@ -30,6 +30,8 @@ func (f *fakeLLMClient) Chat(ctx context.Context, request llm.ChatRequest) (*llm
 
 func TestAnalyzerAnalyze(t *testing.T) {
 	client := &fakeLLMClient{responses: []*llm.ChatResponse{{
+		Model: "qwen-plus",
+		Usage: llm.Usage{PromptTokens: 100, CompletionTokens: 50, TotalTokens: 150},
 		Message: llm.Message{Role: llm.RoleAssistant, Content: `{
 			"summary":"增加订单退款能力",
 			"apis":["POST /api/refunds"],
@@ -42,15 +44,21 @@ func TestAnalyzerAnalyze(t *testing.T) {
 	}}}
 
 	analyzer := NewAnalyzer(client)
-	result, err := analyzer.Analyze(context.Background(), "用户希望增加订单退款功能")
+	analysis, err := analyzer.Analyze(context.Background(), "用户希望增加订单退款功能")
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
-	if result.Summary != "增加订单退款能力" {
-		t.Fatalf("unexpected summary: %s", result.Summary)
+	if analysis.Result.Summary != "增加订单退款能力" {
+		t.Fatalf("unexpected summary: %s", analysis.Result.Summary)
 	}
-	if len(result.APIs) != 1 || result.APIs[0] != "POST /api/refunds" {
-		t.Fatalf("unexpected apis: %+v", result.APIs)
+	if len(analysis.Result.APIs) != 1 || analysis.Result.APIs[0] != "POST /api/refunds" {
+		t.Fatalf("unexpected apis: %+v", analysis.Result.APIs)
+	}
+	if analysis.LLM.Model != "qwen-plus" {
+		t.Fatalf("unexpected llm model: %s", analysis.LLM.Model)
+	}
+	if analysis.LLM.Usage.TotalTokens != 150 {
+		t.Fatalf("unexpected usage: %+v", analysis.LLM.Usage)
 	}
 	if client.requests[0].ResponseFormat != llm.ResponseFormatJSONObject {
 		t.Fatalf("expected json object response format")
@@ -64,12 +72,12 @@ func TestAnalyzerExtractsJSONFromMarkdownFence(t *testing.T) {
 	content := "```json\n{\"summary\":\"需求摘要\",\"apis\":[],\"tables\":[],\"risks\":[],\"test_cases\":[],\"questions\":[]}\n```"
 	client := &fakeLLMClient{responses: []*llm.ChatResponse{{Message: llm.Message{Role: llm.RoleAssistant, Content: content}, FinishReason: "stop"}}}
 
-	result, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	analysis, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
-	if result.Summary != "需求摘要" {
-		t.Fatalf("unexpected summary: %s", result.Summary)
+	if analysis.Result.Summary != "需求摘要" {
+		t.Fatalf("unexpected summary: %s", analysis.Result.Summary)
 	}
 }
 
@@ -77,12 +85,12 @@ func TestAnalyzerExtractsJSONWithPrefixAndSuffix(t *testing.T) {
 	content := "好的，分析如下：\n{\"summary\":\"需求摘要\",\"apis\":[],\"tables\":[],\"risks\":[],\"test_cases\":[],\"questions\":[]}\n以上是结果。"
 	client := &fakeLLMClient{responses: []*llm.ChatResponse{{Message: llm.Message{Role: llm.RoleAssistant, Content: content}, FinishReason: "stop"}}}
 
-	result, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	analysis, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
-	if result.Summary != "需求摘要" {
-		t.Fatalf("unexpected summary: %s", result.Summary)
+	if analysis.Result.Summary != "需求摘要" {
+		t.Fatalf("unexpected summary: %s", analysis.Result.Summary)
 	}
 }
 
@@ -92,12 +100,12 @@ func TestAnalyzerRetriesInvalidJSON(t *testing.T) {
 		{Message: llm.Message{Role: llm.RoleAssistant, Content: `{"summary":"修复后需求摘要"}`}, FinishReason: "stop"},
 	}}
 
-	result, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	analysis, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
-	if result.Summary != "修复后需求摘要" {
-		t.Fatalf("unexpected summary: %s", result.Summary)
+	if analysis.Result.Summary != "修复后需求摘要" {
+		t.Fatalf("unexpected summary: %s", analysis.Result.Summary)
 	}
 	if len(client.requests) != 2 {
 		t.Fatalf("expected retry, got %d requests", len(client.requests))
@@ -151,11 +159,11 @@ func TestAnalyzerNormalizesNilSlices(t *testing.T) {
 		FinishReason: "stop",
 	}}}
 
-	result, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
+	analysis, err := NewAnalyzer(client).Analyze(context.Background(), "需求")
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
-	if result.APIs == nil || result.Tables == nil || result.Risks == nil || result.TestCases == nil || result.Questions == nil {
-		t.Fatalf("expected slices to be normalized: %+v", result)
+	if analysis.Result.APIs == nil || analysis.Result.Tables == nil || analysis.Result.Risks == nil || analysis.Result.TestCases == nil || analysis.Result.Questions == nil {
+		t.Fatalf("expected slices to be normalized: %+v", analysis.Result)
 	}
 }

@@ -155,6 +155,34 @@ backend-go/internal/requirement/analyzer.go
 backend-go/internal/requirement/errors.go
 ```
 
+## Usage 元数据透传
+
+`/api/analyze/requirement` 的 task output 当前包含两部分：
+
+```json
+{
+  "result": {
+    "summary": "...",
+    "apis": [],
+    "tables": [],
+    "risks": [],
+    "test_cases": [],
+    "questions": []
+  },
+  "llm": {
+    "model": "qwen-plus",
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 100,
+      "completion_tokens": 300,
+      "total_tokens": 400
+    }
+  }
+}
+```
+
+当前 usage 只透传在内存 task output 中。后续进入持久化和观测阶段时，再落到 `llm_calls` 表。
+
 ## 当前验证
 
 已通过：

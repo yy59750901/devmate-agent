@@ -134,7 +134,31 @@ curl -X POST http://localhost:8080/api/analyze/requirement \
   -d '{"requirement":"用户希望增加订单退款功能，支持部分退款、原路退回、退款失败重试，并记录操作审计日志。"}'
 ```
 
-现在该接口会真实调用配置的 LLM，并返回结构化需求分析结果。
+现在该接口会真实调用配置的 LLM，并返回结构化需求分析结果和 LLM usage 元数据。
+
+响应中的 `output` 结构类似：
+
+```json
+{
+  "result": {
+    "summary": "...",
+    "apis": [],
+    "tables": [],
+    "risks": [],
+    "test_cases": [],
+    "questions": []
+  },
+  "llm": {
+    "model": "qwen-plus",
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 100,
+      "completion_tokens": 300,
+      "total_tokens": 400
+    }
+  }
+}
+```
 
 ## 6. 当前验证情况
 

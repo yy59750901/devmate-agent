@@ -15,6 +15,17 @@ type Analyzer struct {
 	client llm.Client
 }
 
+type Analysis struct {
+	Result Result      `json:"result"`
+	LLM    LLMMetadata `json:"llm"`
+}
+
+type LLMMetadata struct {
+	Model        string    `json:"model"`
+	FinishReason string    `json:"finish_reason"`
+	Usage        llm.Usage `json:"usage"`
+}
+
 type Result struct {
 	Summary   string   `json:"summary"`
 	APIs      []string `json:"apis"`
@@ -28,7 +39,7 @@ func NewAnalyzer(client llm.Client) *Analyzer {
 	return &Analyzer{client: client}
 }
 
-func (a *Analyzer) Analyze(ctx context.Context, requirement string) (*Result, error) {
+func (a *Analyzer) Analyze(ctx context.Context, requirement string) (*Analysis, error) {
 	requirement = strings.TrimSpace(requirement)
 	if requirement == "" {
 		return nil, newAnalysisError(ErrorKindValidation, "requirement is required", nil)
@@ -62,7 +73,14 @@ func (a *Analyzer) Analyze(ctx context.Context, requirement string) (*Result, er
 			lastErr = newAnalysisError(ErrorKindValidation, "validate requirement analysis result", err)
 			continue
 		}
-		return result, nil
+		return &Analysis{
+			Result: *result,
+			LLM: LLMMetadata{
+				Model:        resp.Model,
+				FinishReason: resp.FinishReason,
+				Usage:        resp.Usage,
+			},
+		}, nil
 	}
 
 	if lastErr != nil {

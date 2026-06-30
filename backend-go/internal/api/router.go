@@ -42,7 +42,7 @@ func (s *Server) analyzeRequirement(c *gin.Context) {
 	t := s.tasks.Create("requirement_analysis", map[string]any{"requirement": req.Requirement})
 	s.tasks.MarkRunning(t.ID)
 
-	result, err := s.requirementAnalyzer.Analyze(c.Request.Context(), req.Requirement)
+	analysis, err := s.requirementAnalyzer.Analyze(c.Request.Context(), req.Requirement)
 	if err != nil {
 		s.tasks.MarkFailed(t.ID, err)
 		updated, _ := s.tasks.Get(t.ID)
@@ -50,7 +50,7 @@ func (s *Server) analyzeRequirement(c *gin.Context) {
 		return
 	}
 
-	s.tasks.MarkSucceeded(t.ID, result)
+	s.tasks.MarkSucceeded(t.ID, analysis)
 	updated, _ := s.tasks.Get(t.ID)
 	c.JSON(http.StatusOK, updated)
 }
