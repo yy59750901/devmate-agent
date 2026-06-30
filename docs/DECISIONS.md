@@ -45,4 +45,4 @@ Go API -> Python Agent Service -> Go task result
 - 后续可以用同一套客户端接 OpenAI、DeepSeek、硅基流动、企业模型网关或本地兼容服务。
 - 先把模型调用抽象成 `internal/llm.Client`，避免业务代码绑定具体供应商。
 
-当前只完成客户端封装和单元测试，暂不直接替换 Python Agent 的 mock 输出。
+当前已完成客户端封装和单元测试，并在 Go Backend 的 `/api/analyze/requirement` 中接入真实 LLM 调用。Python Agent Service 暂时保留 mock，后续用于 LangGraph/RAG 阶段。

@@ -2,13 +2,15 @@
 
 ## 当前状态
 
-当前是第 0 阶段的第一版服务骨架，目标是先打通：
+当前是第 1 阶段：Go LLM Client 与结构化输出。
+
+当前主链路：
 
 ```text
-Go Backend -> Python Agent Service
+Go Backend -> internal/requirement.Analyzer -> internal/llm.Client -> OpenAI-compatible LLM
 ```
 
-Python Agent 现在返回确定性 mock 结果，还没有接入真实 LLM。
+Python Agent Service 仍保留 mock，后续 LangGraph/RAG 阶段再继续演进。
 
 ## 1. 启动 Python Agent 服务
 
@@ -78,7 +80,7 @@ curl http://localhost:8080/health
 
 ## 4. 验证真实 LLM 配置
 
-注意：当前 `POST /api/analyze/requirement` 仍然走 Python Agent mock，不会调用真实大模型。要验证阿里云百炼配置是否生效，先运行专门的 LLM 检查命令：
+如果只想验证阿里云百炼配置是否生效，可以运行专门的 LLM 检查命令：
 
 ```bash
 go -C backend-go run ./cmd/llmcheck
@@ -120,15 +122,19 @@ backend-go/config/config.local.yaml
 }
 ```
 
-如果这里成功，说明 YAML 配置和千问 API Key 可用。之后再把需求分析 mock 替换成真实 LLM 调用。
+如果这里成功，说明 YAML 配置和千问 API Key 可用。
 
-## 5. 调用需求分析接口
+## 5. 调用真实需求分析接口
+
+重启 Go Backend 后调用：
 
 ```bash
 curl -X POST http://localhost:8080/api/analyze/requirement \
   -H 'Content-Type: application/json' \
-  -d '{"requirement":"用户希望增加订单退款功能，支持部分退款和失败重试。"}'
+  -d '{"requirement":"用户希望增加订单退款功能，支持部分退款、原路退回、退款失败重试，并记录操作审计日志。"}'
 ```
+
+现在该接口会真实调用配置的 LLM，并返回结构化需求分析结果。
 
 ## 6. 当前验证情况
 
@@ -142,6 +148,6 @@ go -C backend-go test ./...
 
 ## 7. 下一步
 
-- 使用 `go -C backend-go run ./cmd/llmcheck` 验证真实 LLM 调用。
-- 设计需求分析 Prompt 和 JSON schema。
-- 将需求分析 mock 替换成真实 LLM 调用。
+- 用真实需求调用 `/api/analyze/requirement`，评估结构化输出质量。
+- 根据输出效果优化需求分析 Prompt。
+- 增加失败重试、错误分类和日志记录。

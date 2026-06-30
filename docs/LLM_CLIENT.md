@@ -113,11 +113,11 @@ llm:
 - 如果你使用其他地域或新版百炼业务空间地址，以阿里云控制台给出的 OpenAI 兼容地址为准。
 - 不要把真实 API Key 写入 `backend-go/config/config.example.yaml` 或提交到 Git；真实密钥只放本地 `backend-go/config/config.local.yaml`、IDE 环境变量或 shell 环境变量中。
 
-当前代码只完成客户端封装，并新增了 `cmd/llmcheck` 用于验证真实 LLM 配置；还没有把它接入需求分析接口。
+当前代码已完成客户端封装，并新增了 `cmd/llmcheck` 用于验证真实 LLM 配置；`/api/analyze/requirement` 已接入 Go LLM Client。
 
 ### 验证真实模型调用
 
-`POST /api/analyze/requirement` 目前仍然走 Python Agent mock，所以返回旧结果是正常的。验证千问配置要运行：
+如果只验证千问配置，可以运行：
 
 ```bash
 go -C backend-go run ./cmd/llmcheck
@@ -158,8 +158,8 @@ go -C backend-go test ./...
 
 ## 下一步
 
-1. 设计需求分析 Prompt。
-2. 用 LLM Client 生成结构化 JSON。
-3. 增加 JSON 解析和 schema 校验。
-4. 把 Python Agent 的 mock 输出替换为真实 LLM 调用，或者先在 Go 层直接验证 LLM Client。
-5. 增加重试、超时、错误分类和日志记录。
+1. 用真实需求调用 `/api/analyze/requirement`，检查结构化输出质量。
+2. 优化需求分析 Prompt 和字段约束。
+3. 增加失败重试、错误分类和日志记录。
+4. 增加 token usage 持久化，为成本统计做准备。
+5. 后续在 Python Agent Service 中引入 LangGraph/RAG。

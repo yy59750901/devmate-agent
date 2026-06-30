@@ -4,17 +4,17 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yangyong/devmate-agent/backend-go/internal/agentclient"
+	"github.com/yangyong/devmate-agent/backend-go/internal/requirement"
 	"github.com/yangyong/devmate-agent/backend-go/internal/task"
 )
 
 type Server struct {
-	tasks *task.Store
-	agent *agentclient.Client
+	tasks               *task.Store
+	requirementAnalyzer *requirement.Analyzer
 }
 
-func NewRouter(tasks *task.Store, agent *agentclient.Client) http.Handler {
-	server := &Server{tasks: tasks, agent: agent}
+func NewRouter(tasks *task.Store, requirementAnalyzer *requirement.Analyzer) http.Handler {
+	server := &Server{tasks: tasks, requirementAnalyzer: requirementAnalyzer}
 
 	router := gin.Default()
 	router.GET("/health", server.health)
@@ -42,7 +42,7 @@ func (s *Server) analyzeRequirement(c *gin.Context) {
 	t := s.tasks.Create("requirement_analysis", map[string]any{"requirement": req.Requirement})
 	s.tasks.MarkRunning(t.ID)
 
-	result, err := s.agent.AnalyzeRequirement(c.Request.Context(), agentclient.RequirementAnalysisRequest{Requirement: req.Requirement})
+	result, err := s.requirementAnalyzer.Analyze(c.Request.Context(), req.Requirement)
 	if err != nil {
 		s.tasks.MarkFailed(t.ID, err)
 		updated, _ := s.tasks.Get(t.ID)
