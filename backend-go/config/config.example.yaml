@@ -1,0 +1,11 @@
+http:
+  addr: ":8080"
+
+agent:
+  base_url: "http://localhost:8000"
+
+llm:
+  provider: "openai-compatible"
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  model: "qwen-plus"
+  api_key: ""

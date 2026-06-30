@@ -1,0 +1,25 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+backend-go/config/config.local.yaml
+backend-go/config/*.local.yaml
+agent-python/config/config.local.yaml
+agent-python/config/*.local.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Go
+bin/
+*.test
+coverage.out
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store

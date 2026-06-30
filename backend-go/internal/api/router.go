@@ -1,0 +1,66 @@
+package api
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/yangyong/devmate-agent/backend-go/internal/agentclient"
+	"github.com/yangyong/devmate-agent/backend-go/internal/task"
+)
+
+type Server struct {
+	tasks *task.Store
+	agent *agentclient.Client
+}
+
+func NewRouter(tasks *task.Store, agent *agentclient.Client) http.Handler {
+	server := &Server{tasks: tasks, agent: agent}
+
+	router := gin.Default()
+	router.GET("/health", server.health)
+	router.POST("/api/analyze/requirement", server.analyzeRequirement)
+	router.GET("/api/tasks/:id", server.getTask)
+
+	return router
+}
+
+func (s *Server) health(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "devmate-backend"})
+}
+
+type analyzeRequirementRequest struct {
+	Requirement string `json:"requirement" binding:"required"`
+}
+
+func (s *Server) analyzeRequirement(c *gin.Context) {
+	var req analyzeRequirementRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	t := s.tasks.Create("requirement_analysis", map[string]any{"requirement": req.Requirement})
+	s.tasks.MarkRunning(t.ID)
+
+	result, err := s.agent.AnalyzeRequirement(c.Request.Context(), agentclient.RequirementAnalysisRequest{Requirement: req.Requirement})
+	if err != nil {
+		s.tasks.MarkFailed(t.ID, err)
+		updated, _ := s.tasks.Get(t.ID)
+		c.JSON(http.StatusBadGateway, updated)
+		return
+	}
+
+	s.tasks.MarkSucceeded(t.ID, result)
+	updated, _ := s.tasks.Get(t.ID)
+	c.JSON(http.StatusOK, updated)
+}
+
+func (s *Server) getTask(c *gin.Context) {
+	id := c.Param("id")
+	t, ok := s.tasks.Get(id)
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
+		return
+	}
+	c.JSON(http.StatusOK, t)
+}

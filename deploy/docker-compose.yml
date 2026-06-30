@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: devmate-postgres
+    environment:
+      POSTGRES_DB: devmate
+      POSTGRES_USER: devmate
+      POSTGRES_PASSWORD: devmate
+    ports:
+      - "5432:5432"
+    volumes:
+      - devmate-postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: devmate-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  devmate-postgres-data:
