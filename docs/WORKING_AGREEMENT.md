@@ -61,4 +61,4 @@ devmate-agent/
 
 ## 当前下一步
 
-进入第 0 阶段，完成项目初始化设计后，开始第 1 阶段：Go LLM Client 与结构化输出。
+第 1 阶段已进入收尾验收。后续如开启新会话，先阅读 `docs/STAGE_1_REVIEW.md`、`docs/CURRENT_STAGE.md`、`docs/WORKING_AGREEMENT.md` 和 `docs/ROADMAP.md`，再规划第 2 阶段：需求分析 Agent 最小版产品化。

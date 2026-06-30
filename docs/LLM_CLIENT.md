@@ -176,12 +176,29 @@ backend-go/internal/requirement/errors.go
       "prompt_tokens": 100,
       "completion_tokens": 300,
       "total_tokens": 400
-    }
+    },
+    "latency_ms": 1234
   }
 }
 ```
 
-当前 usage 只透传在内存 task output 中。后续进入持久化和观测阶段时，再落到 `llm_calls` 表。
+当前 usage 和 latency 只透传在内存 task output 中。后续进入持久化和观测阶段时，再落到 `llm_calls` 表。
+
+## 脱敏日志策略
+
+API 层会输出需求分析调用的安全摘要日志：
+
+```text
+requirement_analysis completed task_id=... model=qwen-plus finish_reason=stop total_tokens=400 latency_ms=1234
+requirement_analysis failed task_id=... error_kind=json_parse retryable=true latency_ms=1234
+```
+
+日志只记录元数据，不记录：
+
+- API Key
+- prompt
+- 用户需求原文
+- 模型完整输出
 
 ## 错误响应结构
 
@@ -224,7 +241,6 @@ go -C backend-go test ./...
 
 ## 下一步
 
-1. 用真实需求调用 `/api/analyze/requirement`，检查 result、llm usage 和 error 输出质量。
-2. 增加 LLM 调用日志脱敏。
-3. 后续进入持久化阶段时，将 usage 从 task output 迁移/同步到 `llm_calls` 表。
-4. 完成第 1 阶段总结，然后进入第 2 阶段。
+1. 用真实需求调用 `/api/analyze/requirement`，检查 result、llm usage、latency_ms、error 和脱敏日志输出质量。
+2. 后续进入持久化阶段时，将 usage 从 task output 迁移/同步到 `llm_calls` 表。
+3. 完成第 1 阶段总结，然后进入第 2 阶段。

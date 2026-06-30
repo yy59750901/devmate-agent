@@ -60,6 +60,9 @@ func TestAnalyzerAnalyze(t *testing.T) {
 	if analysis.LLM.Usage.TotalTokens != 150 {
 		t.Fatalf("unexpected usage: %+v", analysis.LLM.Usage)
 	}
+	if analysis.LLM.LatencyMS < 0 {
+		t.Fatalf("unexpected latency: %d", analysis.LLM.LatencyMS)
+	}
 	if client.requests[0].ResponseFormat != llm.ResponseFormatJSONObject {
 		t.Fatalf("expected json object response format")
 	}

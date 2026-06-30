@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/yangyong/devmate-agent/backend-go/internal/llm"
 )
@@ -24,6 +25,7 @@ type LLMMetadata struct {
 	Model        string    `json:"model"`
 	FinishReason string    `json:"finish_reason"`
 	Usage        llm.Usage `json:"usage"`
+	LatencyMS    int64     `json:"latency_ms"`
 }
 
 type Result struct {
@@ -48,6 +50,7 @@ func (a *Analyzer) Analyze(ctx context.Context, requirement string) (*Analysis, 
 		return nil, newAnalysisError(ErrorKindModelCall, "llm client is required", nil)
 	}
 
+	startedAt := time.Now()
 	var lastErr error
 	var lastContent string
 	for attempt := 1; attempt <= maxAnalyzeAttempts; attempt++ {
@@ -79,6 +82,7 @@ func (a *Analyzer) Analyze(ctx context.Context, requirement string) (*Analysis, 
 				Model:        resp.Model,
 				FinishReason: resp.FinishReason,
 				Usage:        resp.Usage,
+				LatencyMS:    time.Since(startedAt).Milliseconds(),
 			},
 		}, nil
 	}

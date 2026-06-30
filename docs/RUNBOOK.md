@@ -155,10 +155,13 @@ curl -X POST http://localhost:8080/api/analyze/requirement \
       "prompt_tokens": 100,
       "completion_tokens": 300,
       "total_tokens": 400
-    }
+    },
+    "latency_ms": 1234
   }
 }
 ```
+
+Go Backend 还会输出脱敏日志，只包含 task_id、model、finish_reason、total_tokens、latency_ms、error_kind、retryable 等元数据，不输出 API Key、prompt、需求原文或模型完整返回内容。
 
 失败时的 `error` 结构类似：
 
@@ -183,6 +186,6 @@ go -C backend-go test ./...
 
 ## 7. 下一步
 
-- 用真实需求调用 `/api/analyze/requirement`，评估 result、llm usage 和 error 输出质量。
-- 增加 LLM 调用日志脱敏。
+- 用真实需求调用 `/api/analyze/requirement`，评估 result、llm usage、latency_ms、error 和脱敏日志输出质量。
 - 后续进入持久化阶段时，将 usage 从 task output 迁移/同步到 `llm_calls` 表。
+- 完成第 1 阶段总结，然后进入第 2 阶段。

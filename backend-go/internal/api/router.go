@@ -1,7 +1,9 @@
 package api
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yangyong/devmate-agent/backend-go/internal/requirement"
@@ -42,14 +44,18 @@ func (s *Server) analyzeRequirement(c *gin.Context) {
 	t := s.tasks.Create("requirement_analysis", map[string]any{"requirement": req.Requirement})
 	s.tasks.MarkRunning(t.ID)
 
+	startedAt := time.Now()
 	analysis, err := s.requirementAnalyzer.Analyze(c.Request.Context(), req.Requirement)
 	if err != nil {
-		s.tasks.MarkFailed(t.ID, taskErrorFromAnalyzeError(err))
+		taskErr := taskErrorFromAnalyzeError(err)
+		s.tasks.MarkFailed(t.ID, taskErr)
+		log.Printf("requirement_analysis failed task_id=%s error_kind=%s retryable=%t latency_ms=%d", t.ID, taskErr.Kind, taskErr.Retryable, time.Since(startedAt).Milliseconds())
 		updated, _ := s.tasks.Get(t.ID)
 		c.JSON(http.StatusBadGateway, updated)
 		return
 	}
 
+	log.Printf("requirement_analysis completed task_id=%s model=%s finish_reason=%s total_tokens=%d latency_ms=%d", t.ID, analysis.LLM.Model, analysis.LLM.FinishReason, analysis.LLM.Usage.TotalTokens, analysis.LLM.LatencyMS)
 	s.tasks.MarkSucceeded(t.ID, analysis)
 	updated, _ := s.tasks.Get(t.ID)
 	c.JSON(http.StatusOK, updated)
