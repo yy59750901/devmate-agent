@@ -1,0 +1,10 @@
+{"id":"rag_001","question":"DevMate Agent 的项目定位是什么？","expected_sources":["README.md","docs/ROADMAP.md"],"expected_keywords":["研发","Agent","可演示","可评测"]}
+{"id":"rag_002","question":"DevMate Agent 当前的技术选型原则是什么？","expected_sources":["docs/WORKING_AGREEMENT.md","docs/STAGE_2_REVIEW.md"],"expected_keywords":["Go","Python","能力边界","生态成熟度"]}
+{"id":"rag_003","question":"第 1 阶段 Go LLM Client 与结构化输出完成了哪些能力？","expected_sources":["docs/STAGE_1_REVIEW.md","docs/CURRENT_STAGE.md"],"expected_keywords":["OpenAI-compatible","结构化","usage","错误"]}
+{"id":"rag_004","question":"第 2 阶段需求分析 Agent 最小版产品化完成了哪些产物？","expected_sources":["docs/STAGE_2_REVIEW.md","docs/ROADMAP.md"],"expected_keywords":["API","Prompt","样例","评测","CLI"]}
+{"id":"rag_005","question":"如何启动 Go Backend？","expected_sources":["docs/RUNBOOK.md"],"expected_keywords":["go -C backend-go run ./cmd/server","config.local.yaml","8080"]}
+{"id":"rag_006","question":"如何配置阿里云百炼或通义千问？","expected_sources":["docs/RUNBOOK.md","docs/LLM_CLIENT.md"],"expected_keywords":["dashscope","qwen-plus","api_key","config.local.yaml"]}
+{"id":"rag_007","question":"需求分析接口怎么调用，请求和响应大概是什么样？","expected_sources":["docs/RUNBOOK.md","docs/STAGE_2_REVIEW.md"],"expected_keywords":["/api/analyze/requirement","requirement","context","prompt_version"]}
+{"id":"rag_008","question":"agent-python 在当前项目里的定位是什么？","expected_sources":["docs/STAGE_2_REVIEW.md","docs/RAG_DESIGN.md"],"expected_keywords":["FastAPI","LlamaIndex","RAG","Python"]}
+{"id":"rag_009","question":"第 3 阶段 RAG 研发知识库第一版计划加载哪些文档？","expected_sources":["docs/RAG_DESIGN.md"],"expected_keywords":["docs/*.md","README.md","STAGE_1_REVIEW","STAGE_2_REVIEW"]}
+{"id":"rag_010","question":"第 3 阶段为什么第一版先不用 PostgreSQL 和 pgvector？","expected_sources":["docs/RAG_DESIGN.md"],"expected_keywords":["本地持久化索引","主流程","数据库","pgvector"]}

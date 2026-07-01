@@ -2,14 +2,14 @@
 
 ## 阶段
 
-第 2 阶段：需求分析 Agent 最小版产品化。
+第 3 阶段：RAG 研发知识库。
 
 ## 本轮目标
 
-完成第 2.6 步，整理第 2 阶段验收总结，并为第 3 阶段提供启动上下文：
+完成第 3.1 步，明确 RAG 目标问题集、文档范围、技术选型和 API 契约草案：
 
 ```text
-第 2 阶段验收总结 -> 第 3 阶段 RAG 研发知识库启动上下文
+RAG 目标问题集 -> 文档范围 -> API 契约 -> 第 3.2 实现入口
 ```
 
 ## 当前已完成
@@ -40,9 +40,11 @@
 - 第 2.4 已完成：新增 `evals/run_requirement_eval.py`，可批量调用需求分析接口并做规则评测。
 - 第 2.5 已完成：新增 `examples/requirement_demo.py`，可通过 CLI 调用接口并展示结构化分析结果。
 - 第 2.6 已完成：新增 `docs/STAGE_2_REVIEW.md`，作为第 2 阶段验收总结和第 3 阶段启动上下文。
+- 第 3.1 已完成：新增 `docs/RAG_DESIGN.md`，明确 RAG 第一版文档范围、目标问题、技术选型、服务边界和 API 契约草案。
+- 第 3.1 已完成：新增 `evals/rag_questions.jsonl`，包含 10 条面向项目文档的 RAG 样例问题。
 
 ## 下一步
 
-1. 如需降低上下文成本，可在新会话中从 `docs/STAGE_2_REVIEW.md` 启动。
-2. 进入第 3 阶段前，先确认第 2 阶段验收清单是否通过。
-3. 第 3 阶段建议从“RAG 研发知识库”开始：明确 RAG 目标问题集、加载 `docs/*.md`、在 `agent-python` 中引入 LlamaIndex 最小检索问答链路。
+1. 第 3.2 步：在 `agent-python` 中实现最小 RAG 服务，使用 FastAPI + LlamaIndex + 本地持久化索引。
+2. 第一版加载 `docs/*.md` 和 `README.md`，暴露 `POST /api/rag/query`。
+3. 返回 `answer` + `sources`，先完成 Python 服务内部闭环，再接入 Go Backend。
