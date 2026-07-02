@@ -6,6 +6,7 @@ backend-go/config/config.local.yaml
 backend-go/config/*.local.yaml
 agent-python/config/config.local.yaml
 agent-python/config/*.local.yaml
+agent-python/storage/rag_index/
 
 # Python
 __pycache__/

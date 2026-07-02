@@ -22,6 +22,16 @@ Python Agent Service 仍保留 mock，后续 LangGraph/RAG 阶段再继续演进
 /Users/yangyong/.workbuddy/binaries/python/envs/default/bin/python -m uvicorn app.main:app --app-dir agent-python --host 0.0.0.0 --port 8000
 ```
 
+### RAG 配置
+
+第 3.2 开始，Python Agent Service 的 RAG 能力需要本地配置：
+
+```bash
+cp agent-python/config/config.example.yaml agent-python/config/config.local.yaml
+```
+
+然后编辑 `agent-python/config/config.local.yaml`，填入 LLM 和 embedding 的 OpenAI-compatible 配置。该文件已被 `.gitignore` 忽略，不要提交真实密钥。
+
 健康检查：
 
 ```bash
@@ -211,17 +221,47 @@ Go Backend 启动后，可以运行第 2.5 步 CLI 演示脚本：
   --context "当前系统已有订单和支付模块，退款依赖第三方支付通道。"
 ```
 
-## 8. 当前验证情况
+## 8. 调用 RAG 问答接口
+
+Python Agent Service 启动后，可以调用第 3.2 的 RAG 接口：
+
+```bash
+curl -X POST http://localhost:8000/api/rag/query \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"第 2 阶段完成了哪些能力？","top_k":5}'
+```
+
+响应结构：
+
+```json
+{
+  "answer": "...",
+  "sources": [
+    {
+      "path": "docs/STAGE_2_REVIEW.md",
+      "title": "第 2 阶段总结与第 3 阶段启动上下文",
+      "snippet": "...",
+      "score": 0.82
+    }
+  ],
+  "metadata": {
+    "index_version": "rag-docs-v1",
+    "top_k": 5
+  }
+}
+```
+
+## 9. 当前验证情况
 
 已完成：
 
 ```bash
 go -C backend-go mod tidy
 go -C backend-go test ./...
-/Users/yangyong/.workbuddy/binaries/python/versions/3.13.12/bin/python3 -m py_compile agent-python/app/main.py agent-python/app/schemas/requirement.py agent-python/app/workflows/requirement_analysis.py
+/Users/yangyong/.workbuddy/binaries/python/versions/3.13.12/bin/python3 -m py_compile agent-python/app/main.py agent-python/app/config.py agent-python/app/schemas/requirement.py agent-python/app/schemas/rag.py agent-python/app/workflows/requirement_analysis.py agent-python/app/workflows/rag_query.py
 ```
 
-## 9. 阶段总结
+## 10. 阶段总结
 
 第 2 阶段总结文档：
 
@@ -231,7 +271,7 @@ docs/STAGE_2_REVIEW.md
 
 后续进入第 3 阶段前，建议先确认第 2 阶段验收清单是否通过。
 
-## 10. 下一步
+## 11. 下一步
 
-- 如需降低上下文成本，可在新会话中从 `docs/STAGE_2_REVIEW.md` 启动。
-- 第 3 阶段建议从“RAG 研发知识库”开始：明确 RAG 目标问题集、加载 `docs/*.md`、在 `agent-python` 中引入 LlamaIndex 最小检索问答链路。
+- 配置 `agent-python/config/config.local.yaml` 后运行 `/api/rag/query`，验证 RAG answer 和 sources。
+- 第 3.3 步：Go Backend 接入 RAG 服务，保持 Go 作为统一 API 入口和 task 管理层。

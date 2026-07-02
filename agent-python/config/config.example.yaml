@@ -1,0 +1,18 @@
+llm:
+  provider: "openai-compatible"
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  model: "qwen-plus"
+  api_key: "你的阿里云百炼 API Key"
+
+embedding:
+  provider: "openai-compatible"
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  model: "text-embedding-v3"
+  api_key: "你的阿里云百炼 API Key"
+
+rag:
+  index_version: "rag-docs-v1"
+  storage_dir: "storage/rag_index"
+  document_paths:
+    - "../docs"
+    - "../README.md"

@@ -6,10 +6,10 @@
 
 ## 本轮目标
 
-完成第 3.1 步，明确 RAG 目标问题集、文档范围、技术选型和 API 契约草案：
+完成第 3.2 步，在 `agent-python` 中实现完整 RAG 问答版最小服务：
 
 ```text
-RAG 目标问题集 -> 文档范围 -> API 契约 -> 第 3.2 实现入口
+FastAPI -> LlamaIndex -> embedding 检索 -> LLM 综合回答 -> sources 引用
 ```
 
 ## 当前已完成
@@ -42,9 +42,10 @@ RAG 目标问题集 -> 文档范围 -> API 契约 -> 第 3.2 实现入口
 - 第 2.6 已完成：新增 `docs/STAGE_2_REVIEW.md`，作为第 2 阶段验收总结和第 3 阶段启动上下文。
 - 第 3.1 已完成：新增 `docs/RAG_DESIGN.md`，明确 RAG 第一版文档范围、目标问题、技术选型、服务边界和 API 契约草案。
 - 第 3.1 已完成：新增 `evals/rag_questions.jsonl`，包含 10 条面向项目文档的 RAG 样例问题。
+- 第 3.2 已完成第一版实现：`agent-python` 新增 `POST /api/rag/query`，基于 LlamaIndex、OpenAI-compatible LLM/Embedding 和本地持久化索引返回 `answer` + `sources`。
 
 ## 下一步
 
-1. 第 3.2 步：在 `agent-python` 中实现最小 RAG 服务，使用 FastAPI + LlamaIndex + 本地持久化索引。
-2. 第一版加载 `docs/*.md` 和 `README.md`，暴露 `POST /api/rag/query`。
-3. 返回 `answer` + `sources`，先完成 Python 服务内部闭环，再接入 Go Backend。
+1. 配置 `agent-python/config/config.local.yaml`，填入 LLM 和 embedding 模型配置。
+2. 启动 Python Agent Service，调用 `POST /api/rag/query` 验证 RAG 问答效果。
+3. 第 3.3 步：Go Backend 接入 RAG 服务，保持 Go 作为统一 API 入口和 task 管理层。
